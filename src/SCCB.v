@@ -20,7 +20,7 @@ parameter   INIT    = 'b000_0001,
             DATA    = 'b010_0000,
             STOP    = 'b100_0000;
 
-reg [7:0] ID_OV7670 = 7'b1010_1010;
+reg [7:0] ID_OV7670 = 8'b1010_1010;
 reg [4:0]   state, next_state;
 reg init_flag, start_flag, device_flag, addr_flag, data_flag, stop_flag;
 reg write_flag;
