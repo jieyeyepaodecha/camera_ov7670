@@ -8,7 +8,7 @@ output  reg     data_finish,
 output  reg     init_en,
 output  reg     sio_c,//sccb_clk 
 output	reg		sio_e,
-inout   reg     sio_d
+inout   wire     sio_d
 );
 
 //FSM
@@ -172,23 +172,27 @@ always @(posedge sclk or negedge rst_n)
     else
         byte_cnt <= byte_cnt;
 
+reg sio_data;
+
 always @(posedge sclk or negedge rst_n)
     if(!rst_n)
-        sio_d <= 1'b1;
+        sio_data <= 1'b1;
     else if(start_flag == 1'b1 && clk_cnt == 8'd49)
-        sio_d <= 1'b0;
+        sio_data <= 1'b0;
     else if(stop_flag == 1'b1 && clk_cnt == 'd49)
-        sio_d <= 1'b1;
+        sio_data <= 1'b1;
     else if(bit_cnt == 4'd9)
-        sio_d <= 1'bz;
+        sio_data <= 1'bz;
     else if(device_flag == 1'b1)
-        sio_d <= ID_OV7670[9-bit_cnt];
+        sio_data <= ID_OV7670[9-bit_cnt];
     else if(addr_flag == 1'b1)
-        sio_d <= sccb_addr[9-bit_cnt];
+        sio_data <= sccb_addr[9-bit_cnt];
     else if(data_flag == 1'b1)
-        sio_d <= sccb_addr[9-bit_cnt];
+        sio_data <= sccb_addr[9-bit_cnt];
     else
-        sio_d <= sio_d;
+        sio_data <= sio_data;
+
+assign sio_d = sio_data;
 
 //FSM
 always @(posedge sclk or negedge rst_n)
