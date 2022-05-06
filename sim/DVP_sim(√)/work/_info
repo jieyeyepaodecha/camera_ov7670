@@ -1,0 +1,68 @@
+m255
+K4
+z2
+!s11f vlog 2020.4 2020.10, Oct 13 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+dF:/Verilog/OV7670/user/sim
+T_opt
+Z0 !s110 1651837156
+V:4UGMni:Aa_IVd20UKahf2
+04 6 4 work tb_DVP fast 0
+=1-88a4c233bb9c-627508e4-2ee-11bc
+o-quiet -auto_acc_if_foreign -work work +acc
+Z1 tCvgOpt 0
+n@_opt
+OL;O;2020.4;71
+vDVP
+R0
+!i10b 1
+!s100 T_mRXA5L^@PgO]So`GSeC3
+Z2 !s11b Dg1SIo80bB@j0V0VzS_@n1
+IkiGoW=HOX@=3h_^0f;jiJ3
+Z3 dF:/Verilog/camera_ov7670/sim/DVP_sim
+w1651836622
+8../../src/DVP.v
+F../../src/DVP.v
+!i122 33
+L0 1 81
+Z4 VDg1SIo80bB@j0V0VzS_@n1
+Z5 OL;L;2020.4;71
+r1
+!s85 0
+31
+Z6 !s108 1651837156.000000
+Z7 !s107 ../../src/DVP.v|./tb_DVP.v|
+Z8 !s90 -reportprogress|300|./tb_DVP.v|
+!i113 0
+Z9 o-L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+R1
+n@d@v@p
+vtb_DVP
+R0
+!i10b 1
+!s100 B;]H`C_Ehk1lXW5iKe:300
+R2
+I3WUNPE]MeH:TA7@]ecI4S3
+R3
+w1651837147
+8./tb_DVP.v
+F./tb_DVP.v
+!i122 33
+L0 4 94
+R4
+R5
+r1
+!s85 0
+31
+R6
+R7
+R8
+!i113 0
+R9
+R1
+ntb_@d@v@p
