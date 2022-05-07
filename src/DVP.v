@@ -5,6 +5,7 @@ input   wire    VSYNC,
 input   wire    HREF,
 input   wire    PCLK,//camera_out_clk
 input	wire	[7:0]   DVP_data,
+output	reg		RGB_ready,//the signal is valid at negedge
 output	reg		[15:0]  FIFO_in_data
 );
 
@@ -57,6 +58,8 @@ always @(posedge PCLK or negedge rst_n)
         data_state <= 'd0;
     else if(HREF_pos == 1'b1)
         data_state <= 'd0;
+    else if(HREF == 1'b0)
+        data_state <= 'd3;
     else if(HREF == 1'b1)
         data_state <= data_state + 1'b1;
     else
@@ -67,8 +70,12 @@ always @(posedge PCLK or negedge rst_n)
         RGB_buf <= 'd0;
     else if(HREF == 1'b1)
         RGB_buf <= {RGB_buf[7:0],DVP_data};
+    else if(HREF == 1'b0)
+        RGB_buf <= 'd0;
     else
         RGB_buf <= RGB_buf;
+
+//RGB'data ready and send
 
 always @(posedge PCLK or negedge rst_n)
     if(!rst_n)
@@ -77,5 +84,14 @@ always @(posedge PCLK or negedge rst_n)
         FIFO_in_data <= RGB_buf;
     else
         FIFO_in_data <= FIFO_in_data;
+
+always @(posedge PCLK or negedge rst_n)
+    if(!rst_n)
+        RGB_ready <= 1'b0;
+    else if(data_state == 'd1)
+        RGB_ready <= 1'b1;
+    else
+        RGB_ready <= 1'b0;
+        
 
 endmodule
