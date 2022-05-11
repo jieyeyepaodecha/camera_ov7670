@@ -53,12 +53,12 @@ parameter	RD_READ    = 3'b010;
 parameter	DATA_READ  = 3'b100;
 
 //command time interval
-parameter   _100us = 13333;
-parameter   tRP    = 3;
-parameter   tRRC   = 9;
-parameter   tRCD   = 3;
-parameter   tMRD   = 2;
-parameter   tDAL   = 5;
+parameter   _100us = 13333;//100us
+parameter   tRP    = 3;//20ns
+parameter   tRRC   = 9;//63ns
+parameter   tRCD   = 3;//20ns
+parameter   tMRD   = 2;//2CLK
+parameter   tDAL   = 5;//2CLK + 20ns
 
 //time_cnt
 reg cnt_flag;
