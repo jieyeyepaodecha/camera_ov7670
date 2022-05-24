@@ -34,7 +34,7 @@ parameter	PR_INIT    = 6'b00_0100;
 parameter	AR_INIT0   = 6'b00_1000;
 parameter	AR_INIT1   = 6'b01_0000;
 parameter	LMR_INIT   = 6'b10_0000;
-parameter   DELAY_INIT = 6'b00_0000;
+parameter   DELAY      = 6'b00_0000;
 
 //FSM_IDLE Steps
 parameter	PR_IDLE   = 5'b0_0001;
@@ -65,9 +65,11 @@ parameter   tDAL   = 5;//2CLK + 20ns
 reg SDRAM_flag = 1'b1;//SDRAM start flag
 reg wait_flag;
 reg delay_flag, delay_finish;
-reg pr_flag;
-reg ar0_flag, ar1_flag;
-
+reg pr_init_flag, ar0_init_flag, ar1_init_flag, lmr_init_flag;
+reg pr_idle_flag, ar0_idle_flag, ar1_idle_flag, isready_y_flag, isready_n_flag;
+reg write_flag, read_flag;
+reg act_read_flag,rd_read_flag, data_read_flag;
+reg act_write_flag, wr0_write_flag, wr1_write_flag;
 //time_cnt
 reg [13:0]  time_cnt;
 
@@ -101,11 +103,11 @@ always @(posedge sclk or negedge rst_n)
         single <= NOP;
     else if(wait_flag == 1'b1)
         single <= NOP;
-    else if(pr_flag == 1'b1)
+    else if(pr_init_flag == 1'b1)
         single <= PR;
-    else if(ar0_flag == 1'b1)
+    else if(ar0_init_flag == 1'b1)
         single <= AR_INIT0;
-    else if(ar1_flag == 1'b1)
+    else if(ar1_init_flag == 1'b1)
         single <= AR_INIT1;
 
 //FSM
@@ -128,25 +130,50 @@ always @(posedge sclk or negedge rst_n)
             else    next_state <= IDLE_INIT;
         end
         WAIT_INIT:begin
-            next_state <= DELAY_INIT;
+            next_state <= DELAY;
         end
         PR_INIT:begin
-            next_state <= DELAY_INIT;
+            next_state <= DELAY;
         end
         AR_INIT0:begin
-            next_state <= DELAY_INIT;
+            next_state <= DELAY;
         end
         AR_INIT1:begin
-            next_state <= DELAY_INIT;
+            next_state <= DELAY;
         end
         LMR_INIT:begin
-            next_state <= DELAY_INIT;
+            next_state <= DELAY;
         end
-        DELAY_INIT:begin
-            if(delay_finish == 1'b1 && wait_flag == 1'b1)   next_state <= PR_INIT;
-            else if(delay_finish == 1'b1 && pr_flag == 1'b1)    next_state <= AR_INIT0;
-            else if(delay_finish == 1'b1 && ar0_flag == 1'b1)    next_state <= AR_INIT1;
-            else if(delay_finish == 1'b1 && ar1_flag == 1'b1)    next_state <= LMR_INIT;
+        PR_IDLE:begin
+            next_state <= DELAY;
+        end
+        AR_IDLE0:begin
+            next_state <= DELAY;
+        end
+        AR_IDLE1:begin
+            next_state <= DELAY;
+        end
+        IsReady:begin
+            next_state <= DELAY;
+        end
+        DELAY:begin
+            if(delay_finish == 1'b1 && wait_flag == 1'b1)   next_state <= PR_INIT;//开始初始化模式
+            else if(delay_finish == 1'b1 && pr_init_flag == 1'b1)   next_state <= AR_INIT0;
+            else if(delay_finish == 1'b1 && ar0_init_flag == 1'b1)  next_state <= AR_INIT1;
+            else if(delay_finish == 1'b1 && ar1_init_flag == 1'b1)  next_state <= LMR_INIT;
+            else if(delay_finish == 1'b1 && lmr_init_flag == 1'b1)  next_state <= PR_IDLE;//开始空闲刷新模式
+            else if(delay_finish == 1'b1 && pr_idle_flag == 1'b1)   next_state <= AR_IDLE0;
+            else if(delay_finish == 1'b1 && ar0_idle_flag == 1'b1)  next_state <= AR_IDLE1;
+            else if(delay_finish == 1'b1 && ar1_idle_flag == 1'b1)  next_state <= IsReady;
+            else if(delay_finish == 1'b1 && isready_n_flag == 1'b1) next_state <= COUNT;
+            else if(delay_finish == 1'b1 && isready_y_flag == 1'b1 && read_flag == 1'b1)  next_state <= ACT_READ;//开始读模式
+            else if(delay_finish == 1'b1 && act_read_flag == 1'b1)  next_state <= RD_READ;
+            else if(delay_finish == 1'b1 && rd_read_flag == 1'b1)   next_state <= DATA_READ;
+            else if(delay_finish == 1'b1 && data_read_flag == 1'b1) next_state <= PR_IDLE;//返回空闲刷新模式
+            else if(delay_finish == 1'b1 && isready_y_flag == 1'b1 && write_flag == 1'b1) next_state <= ACT_WIRTE;//开始写模式
+            else if(delay_finish == 1'b1 && act_write_flag == 1'b1) next_state <= WR_WRITE0;
+            else if(delay_finish == 1'b1 && wr0_write_flag == 1'b1) next_state <= WR_WRITE1;
+            else if(delay_finish == 1'b1 && wr1_write_flag == 1'b1) next_state <= PR_IDLE;//返回空闲刷新模式
         end
         default:begin
             
@@ -159,7 +186,7 @@ always @(posedge sclk or negedge rst_n)
         delay_flag <= 1'b0;
         delay_select <= 'd0;
         wait_flag <= 1'b0;
-        pr_flag <= 1'b0;
+        pr_init_flag <= 1'b0;
     end
     else
         case(state)
@@ -167,49 +194,49 @@ always @(posedge sclk or negedge rst_n)
             delay_flag <= 1'b0;
             delay_select <= 'd0;
             wait_flag <= 1'b0;
-            pr_flag <= 1'b0;
+            pr_init_flag <= 1'b0;
         end
         WAIT_INIT:begin
             delay_flag <= 1'b0;
             delay_select <= _100us;
             wait_flag <= 1'b1;
-            pr_flag <= 1'b0;
+            pr_init_flag <= 1'b0;
         end
         PR_INIT:begin
             delay_flag <= 1'b0;
             delay_select <= tRP;
             wait_flag <= 1'b0;
-            pr_flag <= 1'b1;
+            pr_init_flag <= 1'b1;
         end
         AR_INIT0:begin
             delay_flag <= 1'b0;
             delay_select <= tRRC;
             wait_flag <= 1'b0;
-            pr_flag <= 1'b0;
+            pr_init_flag <= 1'b0;
         end
         AR_INIT1:begin
             delay_flag <= 1'b0;
             delay_select <= tRRC;
             wait_flag <= 1'b0;
-            pr_flag <= 1'b0;
+            pr_init_flag <= 1'b0;
         end
         LMR_INIT:begin
             delay_flag <= 1'b0;
             delay_select <= tMRD;
             wait_flag <= 1'b0;
-            pr_flag <= 1'b0;
+            pr_init_flag <= 1'b0;
         end
-        DELAY_INIT:begin
+        DELAY:begin
             delay_flag <= 1'b1;
             delay_select <= delay_select;
             wait_flag <= wait_flag;
-            pr_flag <= pr_flag;
+            pr_init_flag <= pr_init_flag;
         end
         default:begin
             delay_flag <= 1'b0;
             delay_select <= 'd0;
             wait_flag <= 1'b0;
-            pr_flag <= 1'b0;
+            pr_init_flag <= 1'b0;
         end
         endcase
 
