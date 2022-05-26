@@ -45,8 +45,7 @@ parameter	COUNT     = 5'b1_0000;
 
 //FSM_WRITE Steps
 parameter	ACT_WIRTE  = 3'b001;
-parameter	WR_WRITE0  = 3'b010;
-parameter	WR_WRITE1  = 3'b100;
+parameter	WR_WRITE  = 3'b010;
 
 //FSM_READ Steps
 parameter	ACT_READ   = 3'b001;
@@ -69,7 +68,7 @@ reg pr_init_flag, ar0_init_flag, ar1_init_flag, lmr_init_flag;
 reg pr_idle_flag, ar0_idle_flag, ar1_idle_flag, isready_y_flag, isready_n_flag;
 reg write_flag, read_flag;
 reg act_read_flag,rd_read_flag, data_read_flag;
-reg act_write_flag, wr0_write_flag, wr1_write_flag;
+reg act_write_flag, wr_write_flag;
 //time_cnt
 reg [13:0]  time_cnt;
 
@@ -106,9 +105,25 @@ always @(posedge sclk or negedge rst_n)
     else if(pr_init_flag == 1'b1)
         single <= PR;
     else if(ar0_init_flag == 1'b1)
-        single <= AR_INIT0;
+        single <= AR;
     else if(ar1_init_flag == 1'b1)
-        single <= AR_INIT1;
+        single <= AR;
+    else if(lmr_init_flag == 1'b1)
+        single <= LMR;
+    else if(pr_idle_flag == 1'b1)
+        single <= PR;
+    else if(ar0_idle_flag == 1'b1)
+        single <= AR;
+    else if(ar1_idle_flag == 1'b1)
+        single <= AR;
+    else if(act_read_flag == 1'b1)
+        single <= ACT;
+    else if(rd_read_flag == 1'b1)
+        single <= RD;
+    else if(act_write_flag == 1'b1)
+        single <= ACT;
+    else if(wr_write_flag == 1'b1)
+        single <= WR;
 
 //FSM
 reg [13:0]  delay_select;
@@ -156,6 +171,24 @@ always @(posedge sclk or negedge rst_n)
         IsReady:begin
             next_state <= DELAY;
         end
+        COUNT:begin
+            next_state <= DELAY;
+        end
+        ACT_READ:begin
+            next_state <= DELAY;
+        end
+        RD_READ:begin
+            next_state <= DELAY;
+        end
+        DATA_READ:begin
+            next_state <= DELAY;
+        end
+        ACT_WIRTE:begin
+            next_state <= DELAY;
+        end
+        WR_WRITE:begin
+            next_state <= DELAY;
+        end
         DELAY:begin
             if(delay_finish == 1'b1 && wait_flag == 1'b1)   next_state <= PR_INIT;//开始初始化模式
             else if(delay_finish == 1'b1 && pr_init_flag == 1'b1)   next_state <= AR_INIT0;
@@ -171,12 +204,12 @@ always @(posedge sclk or negedge rst_n)
             else if(delay_finish == 1'b1 && rd_read_flag == 1'b1)   next_state <= DATA_READ;
             else if(delay_finish == 1'b1 && data_read_flag == 1'b1) next_state <= PR_IDLE;//返回空闲刷新模式
             else if(delay_finish == 1'b1 && isready_y_flag == 1'b1 && write_flag == 1'b1) next_state <= ACT_WIRTE;//开始写模式
-            else if(delay_finish == 1'b1 && act_write_flag == 1'b1) next_state <= WR_WRITE0;
-            else if(delay_finish == 1'b1 && wr0_write_flag == 1'b1) next_state <= WR_WRITE1;
-            else if(delay_finish == 1'b1 && wr1_write_flag == 1'b1) next_state <= PR_IDLE;//返回空闲刷新模式
+            else if(delay_finish == 1'b1 && act_write_flag == 1'b1) next_state <= WR_WRITE;
+            else if(delay_finish == 1'b1 && wr_write_flag == 1'b1) next_state <= PR_IDLE;//返回空闲刷新模式
+            else    next_state <= next_state;
         end
         default:begin
-            
+            next_state <= DELAY;
         end
 
         endcase
