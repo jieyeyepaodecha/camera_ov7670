@@ -22,35 +22,31 @@ parameter	AR   = 5'b1_0001;//Auto Refresh
 parameter	LMR  = 5'b1_0000;//Load Mode Register
 
 //FSM_main Steps
-parameter   INIT = 4'b0001;
-parameter   IDLE = 4'b0010;
-parameter   WRITE= 4'b0100;
-parameter	READ = 4'b1000;
-
+parameter   INIT       = 6'b00_0001;
+parameter   IDLE       = 6'b00_0010;
+parameter   WRITE      = 6'b00_0011;
+parameter	READ       = 6'b00_0100;
 //FSM_INIT Steps
-parameter	IDLE_INIT  = 6'b00_0001;
-parameter	WAIT_INIT  = 6'b00_0010;
-parameter	PR_INIT    = 6'b00_0100;
+parameter	IDLE_INIT  = 6'b00_0101;
+parameter	WAIT_INIT  = 6'b00_0110;
+parameter	PR_INIT    = 6'b00_0111;
 parameter	AR_INIT0   = 6'b00_1000;
-parameter	AR_INIT1   = 6'b01_0000;
-parameter	LMR_INIT   = 6'b10_0000;
-parameter   DELAY      = 6'b00_0000;
-
+parameter	AR_INIT1   = 6'b00_1001;
+parameter	LMR_INIT   = 6'b00_1010;
+parameter   DELAY      = 6'b00_1011;
 //FSM_IDLE Steps
-parameter	PR_IDLE   = 5'b0_0001;
-parameter	AR_IDLE0  = 5'b0_0010;
-parameter	AR_IDLE1  = 5'b0_0100;
-parameter	IsReady   = 5'b0_1000;
-parameter	COUNT     = 5'b1_0000;
-
+parameter	PR_IDLE    = 6'b00_1100;
+parameter	AR_IDLE0   = 6'b00_1101;
+parameter	AR_IDLE1   = 6'b00_1110;
+parameter	IsReady    = 6'b00_1111;
+parameter	COUNT      = 6'b01_0000;
 //FSM_WRITE Steps
-parameter	ACT_WIRTE  = 3'b001;
-parameter	WR_WRITE  = 3'b010;
-
+parameter	ACT_WIRTE  = 6'b01_0001;
+parameter	WR_WRITE   = 6'b01_0010;
 //FSM_READ Steps
-parameter	ACT_READ   = 3'b001;
-parameter	RD_READ    = 3'b010;
-parameter	DATA_READ  = 3'b100;
+parameter	ACT_READ   = 6'b01_0011;
+parameter	RD_READ    = 6'b01_0100;
+parameter	DATA_READ  = 6'b01_0101;
 
 //command time interval
 parameter   _100us = 13333;//100us
