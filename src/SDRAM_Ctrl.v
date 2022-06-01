@@ -50,6 +50,7 @@ parameter	DATA_READ  = 6'b01_0101;
 
 //command time interval
 parameter   _100us = 13333;//100us
+parameter	_7us   = 930;//7us
 parameter   tRP    = 3;//20ns
 parameter   tRRC   = 9;//63ns
 parameter   tRCD   = 3;//20ns
@@ -62,6 +63,7 @@ reg wait_flag;
 reg delay_flag, delay_finish;
 reg pr_init_flag, ar0_init_flag, ar1_init_flag, lmr_init_flag;
 reg pr_idle_flag, ar0_idle_flag, ar1_idle_flag, isready_y_flag, isready_n_flag;
+reg ctrl_flag, count_flag;
 reg write_flag, read_flag;
 reg act_read_flag,rd_read_flag, data_read_flag;
 reg act_write_flag, wr_write_flag;
@@ -195,6 +197,7 @@ always @(posedge sclk or negedge rst_n)
             else if(delay_finish == 1'b1 && ar0_idle_flag == 1'b1)  next_state <= AR_IDLE1;
             else if(delay_finish == 1'b1 && ar1_idle_flag == 1'b1)  next_state <= IsReady;
             else if(delay_finish == 1'b1 && isready_n_flag == 1'b1) next_state <= COUNT;
+            else if(delay_finish == 1'b1 && count_flag == 1'b1)     next_state <= PR_IDLE;//若无操作指令，继续空闲刷新模式
             else if(delay_finish == 1'b1 && isready_y_flag == 1'b1 && read_flag == 1'b1)  next_state <= ACT_READ;//开始读模式
             else if(delay_finish == 1'b1 && act_read_flag == 1'b1)  next_state <= RD_READ;
             else if(delay_finish == 1'b1 && rd_read_flag == 1'b1)   next_state <= DATA_READ;
@@ -209,63 +212,93 @@ always @(posedge sclk or negedge rst_n)
         end
 
         endcase
+reg [16:0] flag_comp;
+always @(*)
+    flag_comp = {delay_flag, wait_flag, pr_init_flag, ar0_init_flag, ar1_init_flag, lmr_init_flag 
+                , pr_idle_flag, ar0_idle_flag, ar1_idle_flag, isready_n_flag, isready_y_flag, count_flag 
+                , act_read_flag, rd_read_flag, data_read_flag, act_write_flag, wr_write_flag};
 
 always @(posedge sclk or negedge rst_n)
     if(!rst_n)begin
-        delay_flag <= 1'b0;
         delay_select <= 'd0;
-        wait_flag <= 1'b0;
-        pr_init_flag <= 1'b0;
+        flag_comp <= 17'b0_0000_0000_0000_0000;
     end
     else
         case(state)
         IDLE_INIT:begin
-            delay_flag <= 1'b0;
             delay_select <= 'd0;
-            wait_flag <= 1'b0;
-            pr_init_flag <= 1'b0;
+            flag_comp <= 17'b0_0000_0000_0000_0000;
         end
         WAIT_INIT:begin
-            delay_flag <= 1'b0;
             delay_select <= _100us;
-            wait_flag <= 1'b1;
-            pr_init_flag <= 1'b0;
+            flag_comp <= 17'b0_1000_0000_0000_0000;
         end
         PR_INIT:begin
-            delay_flag <= 1'b0;
             delay_select <= tRP;
-            wait_flag <= 1'b0;
-            pr_init_flag <= 1'b1;
+            flag_comp <= 17'b0_0100_0000_0000_0000;
         end
         AR_INIT0:begin
-            delay_flag <= 1'b0;
             delay_select <= tRRC;
-            wait_flag <= 1'b0;
-            pr_init_flag <= 1'b0;
+            flag_comp <= 17'b0_0010_0000_0000_0000;
         end
         AR_INIT1:begin
-            delay_flag <= 1'b0;
             delay_select <= tRRC;
-            wait_flag <= 1'b0;
-            pr_init_flag <= 1'b0;
+            flag_comp <= 17'b0_0001_0000_0000_0000;
         end
         LMR_INIT:begin
-            delay_flag <= 1'b0;
             delay_select <= tMRD;
-            wait_flag <= 1'b0;
-            pr_init_flag <= 1'b0;
+            flag_comp <= 17'b0_0000_1000_0000_0000;
         end
         DELAY:begin
-            delay_flag <= 1'b1;
             delay_select <= delay_select;
-            wait_flag <= wait_flag;
-            pr_init_flag <= pr_init_flag;
+            flag_comp <= {1'b1,flag_comp[15:0]};
+        end
+        PR_IDLE:begin
+            delay_select <= tRP;
+            flag_comp <= 17'b0_0000_0100_0000_0000;
+        end
+        AR_IDLE0:begin
+            delay_select <= tRRC;
+            flag_comp <= 17'b0_0000_0010_0000_0000;
+        end
+        AR_IDLE1:begin
+            delay_select <= tRRC;
+            flag_comp <= 17'b0_0000_0001_0000_0000;
+        end
+        IsReady:begin
+            if(ctrl_flag == 1'b1)
+                flag_comp <= 17'b0_0000_0000_0100_0000;
+            else 
+                flag_comp <= 17'b0_0000_0000_1000_0000;
+
+        end
+        COUNT:begin
+            delay_select <= _7us;
+            flag_comp <= 17'b0_0000_0000_0010_0000;
+        end
+        ACT_READ:begin
+            delay_select <= tRCD;
+            flag_comp <= 17'b0_0000_0000_0001_0000;
+        end
+        RD_READ:begin
+            delay_select <= 2;
+            flag_comp <= 17'b0_0000_0000_0000_1000;
+        end
+        DATA_READ:begin
+            delay_select <= tRP;
+            flag_comp <= 17'b0_0000_0000_0000_0100;
+        end
+        ACT_WIRTE:begin
+            delay_select <= tRCD;
+            flag_comp <= 17'b0_0000_0000_0000_0010;
+        end
+        WR_WRITE:begin
+            delay_select <= tDAL;
+            flag_comp <= 17'b0_0000_0000_0000_0001;
         end
         default:begin
-            delay_flag <= 1'b0;
             delay_select <= 'd0;
-            wait_flag <= 1'b0;
-            pr_init_flag <= 1'b0;
+            flag_comp <= 17'b0_0000_0000_0000_0000;
         end
         endcase
 
